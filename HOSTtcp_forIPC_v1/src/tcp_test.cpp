@@ -13,8 +13,8 @@
 #define SERVER_PORT 12345
 
 uint32_t listNum = 0;
-std::vector<uint8_t> Head{0xF6, 0xF7, 0xF8, 0xF9};
-std::vector<uint8_t> End{0xFA, 0xFB, 0xFC, 0xFD};
+std::vector<uint8_t> Head{0xAB, 0xCD, 0xEF};
+std::vector<uint8_t> End{0x12, 0x34, 0x56};
 std::vector<uint8_t> Function_buffer;
 bool running_tcp = true;
 
