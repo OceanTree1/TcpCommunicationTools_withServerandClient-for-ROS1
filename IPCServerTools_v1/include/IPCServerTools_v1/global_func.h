@@ -17,3 +17,14 @@ public:
     static bool isBigEndian();                                                      // 检查系统是否为大端
     static std::vector<std::uint8_t> doubleToVector(double value, bool toBigEndian = false);// 将double转换为std::vector<uint8_t>
 };
+
+
+class CutData {
+public:
+    int intValue;
+    std::vector<uint8_t> uint8Vector;
+
+    static std::vector<uint8_t> Process(const std::vector<uint8_t>& recBytes);
+    static std::vector<uint8_t> FindHead(const std::vector<uint8_t>& recBuffer, const std::vector<uint8_t>& sequence, int startIndex = 0);
+    static void RemoveProcessedData(int startIndex);
+};
