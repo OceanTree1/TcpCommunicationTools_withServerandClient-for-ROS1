@@ -14,7 +14,7 @@ std::vector<uint8_t> CodeLength = {0x00, 0x02};
 bool ReturnSuccessful(int client_socket, std::vector<uint8_t> ID_buffer, std::vector<uint8_t> Function_buffer, uint16_t ErrorCode, std::vector<uint8_t> Recv_head, std::vector<uint8_t> Recv_end){
     std::vector<uint8_t> Controller_send_Successful = {};       //初始化成功消息
     std::vector<uint8_t> Successful_code = server_global_functools_uintChange::uint16ToVector(ErrorCode);
-    Controller_send_Successful.insert(Controller_send_Successful.end(),ID_buffer.begin(),ID_buffer.end());              // 放入自增序列
+    Controller_send_Successful.insert(Controller_send_Successful.end(),ID_buffer.begin(),ID_buffer.end());              // 放入序号
     Controller_send_Successful.insert(Controller_send_Successful.end(),Function_buffer.begin(),Function_buffer.end());  // 放入功能码
     Controller_send_Successful.insert(Controller_send_Successful.end(),CodeLength.begin(),CodeLength.end());  // 放入长度
     Controller_send_Successful.insert(Controller_send_Successful.end(),Successful_code.begin(),Successful_code.end());  // 放入成功码
@@ -32,7 +32,7 @@ bool ReturnFalse(int client_socket, std::vector<uint8_t> ID_buffer, std::vector<
     //返回上位机失败指令
     std::vector<uint8_t> False_code = server_global_functools_uintChange::uint16ToVector(ErrorCode);
     std::vector<uint8_t> Controller_send_False = {};       // 初始化失败消息
-    Controller_send_False.insert(Controller_send_False.end(),ID_buffer.begin(),ID_buffer.end());                // 放入自增序列
+    Controller_send_False.insert(Controller_send_False.end(),ID_buffer.begin(),ID_buffer.end());                // 放入序号
     Controller_send_False.insert(Controller_send_False.end(),Function_buffer.begin(),Function_buffer.end());    // 放入功能码
     Controller_send_False.insert(Controller_send_False.end(),CodeLength.begin(),CodeLength.end());              // 放入长度
     Controller_send_False.insert(Controller_send_False.end(),False_code.begin(),False_code.end());              // 放入失败码

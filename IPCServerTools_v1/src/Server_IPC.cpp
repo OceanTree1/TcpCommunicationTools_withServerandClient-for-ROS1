@@ -1,7 +1,6 @@
 #include "IPCServerTools_v1/std_library.h"
-#include "return.cpp"
-#include "Print_BYTE.cpp"
 #include "IPCServerTools_v1/global_func.h"
+#include "Concurrentdic.cpp"
 
 #define MAX_BUFFER_SIZE 4096    // 最大size
 #define MAX_CLIENTS 5           // 最大客户端连接数
@@ -67,7 +66,8 @@ public:
 
         int bytes_received; // 接收字节数
 
-        ClipRecDataProcessor cliprecdataprocessor;  //裁帧类
+        // ClipRecDataProcessor cliprecdataprocessor;  //裁帧类
+        CutData cutdata;
         ConcurrentDictionary<uint32_t,std::vector<uint8_t>> myDictionary;   //字典类
         
         unsigned char recv_Msg_buffer[MAX_BUFFER_SIZE];
@@ -79,6 +79,7 @@ public:
             std::vector<uint8_t> Process_Msg_buffer;   //处理消息缓存区
             std::vector<uint8_t> Processready_Msg_buffer;   //处理完成缓存区
             std::vector<ProcessedData> recvofdataList_Msg_buffer;   //处理完成后数据部分缓存区
+            std::vector<std::vector<uint8_t>> recvdataList_Msg_buffer;
 
             // 接收客户端数据并判断是否在线
             bytes_received = recv(client_socket, recv_Msg_buffer, sizeof(recv_Msg_buffer), 0);  // 接收客户端发送的数据
@@ -116,7 +117,7 @@ public:
             std::cout << std::dec << std::endl;
 
             // 丢入Process函数进行处理，先截取到一帧完整的报文
-            recvofdataList_Msg_buffer = cliprecdataprocessor.Process(Process_Msg_buffer);   //截取消息
+            recvdataList_Msg_buffer = cutdata.Process(Process_Msg_buffer);   //截取消息
 
             // For循环处理单帧数据
             for (const auto& processedData : recvofdataList_Msg_buffer) {   //遍历容器内所有数据，有几帧报文重复几次（切割单帧）
@@ -131,20 +132,20 @@ public:
                 uint32_t IDuint32 = server_global_functools_uintChange::vectorToUint32(ID_buffer);  // 转换成uint32_t
                 
                 // 截取功能码
-                std::vector<uint8_t> Function_buffer(full_right_recv.begin() + 8, full_right_recv.begin() + 8 + 4);// 取出功能码
-                uint32_t Function_buffer32 = server_global_functools_uintChange::vectorToUint32(Function_buffer);// 转换成uint32_t
-                std::cout << "FunctionBuffer: " ;   // 先打印ip地址，分辨从哪个客户端传来的
-                for (int i = 0; i < Function_buffer.size(); ++i) {   // char转uint8_t
-                    std::cout << "0x" << std::hex << static_cast<int>(Function_buffer[i]) << " ";
-                }
-                std::cout << std::dec << std::endl; // 打印结束
+                std::vector<uint8_t> Function_buffer(full_right_recv.begin() + 8, full_right_recv.begin() + 8 + 4); // 取出功能码
+                server_global_functools_print::print_vector_uint8t("FunctionBuffer", Function_buffer);              // 打印
+                uint32_t Function_buffer32 = server_global_functools_uintChange::vectorToUint32(Function_buffer);   // 转换成uint32_t
+
+                // 截取ID码
+                std::vector<uint8_t> deviceID(full_right_recv.begin() + full_right_recv.size() - 7, full_right_recv.begin() + full_right_recv.size() - 7 + 3);
+                uint32_t deviceID_32 = server_global_functools_uintChange::vectorToUint32(deviceID);
 
                 // 初始化错误码
                 uint16_t ErrorCode = 0x0000;    // 错误代码（包含正确代码，返回用）
 
-                // 判断报文是否正确(crc16校验)
-                if (cliprecdataprocessor.CutDataforcrc16(full_right_recv)) { 
-                    // Crc16校验正确之后开始处理业务
+                // 判断报文是否正确(device/crc16校验)
+                if (server_global_functools_deviceID::deviceID_judging(deviceID_32)) { 
+                    // device/Crc16校验正确之后开始处理业务
                     
                     // 先与前一帧的ID对比，判断是否是一样的，一样的不处理
                     // 判断是否有这个Key以及Key下的Value是否在字典中已经存在
@@ -154,38 +155,6 @@ public:
                     } else {
                         myDictionary.Insert(IDuint32,full_right_recv);  // 插入字典
                     }
-                    
-                    //判断Data数据长度是否对应
-                    int Datas_Length = full_right_recv.size() - 20; // 自己读取的data长度
-                    std::vector<uint8_t> DatasSizespace_uint8(full_right_recv.begin() + 12, full_right_recv.begin() + 12 + 2);
-                    int DataSizespace = static_cast<int>(server_global_functools_uintChange::vectorToUint16(DatasSizespace_uint8));
-                    std::cout << "当前的DataSizespace为：" << DataSizespace << std::endl;
-                    // 当数据有，并且源数据也不为0时
-                    if ((full_right_recv[12] != 0 || full_right_recv[13] != 0) && Datas_Length != 0){
-                        if(DataSizespace != Datas_Length){
-                            std::cout << "自己算取的数据长度为: " << Datas_Length << ",跟源数据中的长度("<< DataSizespace <<")不对等" << std::endl;
-                            continue;
-                        }
-                    // 当数据没有，并且源数据也为0时
-                    } else if ((full_right_recv[12] == 0 && full_right_recv[13] == 0) && Datas_Length == 0) {
-                        std::cout << "数据长度为0,和源数据长度(" << DataSizespace << ")对比通过" << std::endl;
-                        // 请求反馈值的功能码case需要进行剔除
-                        if (Function_buffer32 != 0x5854696E && Function_buffer32 != 0x585A696E && Function_buffer32 != 0x5A59696E && Function_buffer32 != 0x4459696E && Function_buffer32 != 0x4459706E) {
-                            std::cout << "Error:控制命令数据不能为零" << std::endl;
-                            ErrorCode = 0x0002; // 2为数据错误
-                        }
-                    // 其他情况
-                    } else {
-                        std::cout << "数据不对" << std::endl;
-                        ErrorCode = 0x0002; // 2为数据错误
-                    }
-                    if (ErrorCode != 0x0000) {
-                        //返回失败码
-                        if (ReturnFalse(client_socket, ID_buffer, Function_buffer, ErrorCode, Recv_head, Recv_end)) {
-                            std::cout << "反馈'False'成功" << std::endl;
-                        }
-                        continue;
-                    }
 
                     //功能分支
                     try{
@@ -194,41 +163,41 @@ public:
                         // 判断功能码
                         switch (Function_buffer32)
                         {
-                        case 0x11111111:    // 心跳功能
-                        {
-                            ErrorCode = 0x0001;
-                            std::cout << "心跳正常" << std::endl;
-                            break;
-                        }
-
-                        //*********************** 数据写入Case *********************
-
-                        case 0x11111112:    // 工作区域数据获取
-                        {
-                            // ****输入业务逻辑****
-                            ErrorCode = 0x0001;
-                            // *******************
-                            break;
-                        }
-
-                        //*********************** 数据返回Case *********************
-                        case 0x11111113:    // 行走状态信息返回
-                        {
-                            std::string BackDataMode = "行走状态信息";
-                            // 读取数组返回数据并发送
-                            if (ReturnData(client_socket, ID_buffer, Function_buffer, Information_Feedback, BackDataMode, Recv_head, Recv_end)) {
-                                continue;
-                            } else {
-                                ErrorCode = 0x0003; // 3为数据返回Case未返回
+                            case 0x11111111:    // 心跳功能
+                            {
+                                ErrorCode = 0x0001;
+                                std::cout << "心跳正常" << std::endl;
+                                break;
                             }
-                        }
-                        
-                        default:    // 出现未定义功能码
-                        {
-                            //返回失败码
-                            ErrorCode = 0x0004; //  4为功能码错误（未定义功能）
-                            break;
-                        }
+
+                            //*********************** 数据写入Case *********************
+
+                            case 0x11111112:    // 工作区域数据获取
+                            {
+                                // ****输入业务逻辑****
+                                ErrorCode = 0x0001;
+                                // *******************
+                                break;
+                            }
+
+                            //*********************** 数据返回Case *********************
+                            case 0x11111113:    // 行走状态信息返回
+                            {
+                                std::string BackDataMode = "行走状态信息";
+                                // 读取数组返回数据并发送
+                                if (ReturnData(client_socket, ID_buffer, Function_buffer, Information_Feedback, BackDataMode, Recv_head, Recv_end)) {
+                                    continue;
+                                } else {
+                                    ErrorCode = 0x0003; // 3为数据返回Case未返回
+                                }
+                            }
+                            
+                            default:    // 出现未定义功能码
+                            {
+                                //返回失败码
+                                ErrorCode = 0x0004; //  4为功能码错误（未定义功能）
+                                break;
+                            }
                         }
                     } catch (const std::exception& e) {
                         std::cerr << "Exception: " << e.what() << std::endl;
@@ -299,6 +268,9 @@ public:
             exit(EXIT_FAILURE);
         }
     }
+
+private:
+    uint8_t heart_jump = 0;
 };
 
 // 定义变量与常量区域
