@@ -1,3 +1,6 @@
+#ifndef global_data_H
+#define global_data_H
+
 #include "std_library.h"
 
 class server_global_functools_Crc {
@@ -22,6 +25,15 @@ public:
     static std::vector<std::uint8_t> doubleToVector(double value, bool toBigEndian = false);// 将double转换为std::vector<uint8_t>
 };
 
+class server_global_functools_return{
+public:
+    static bool ReturnSuccessful(int client_socket, std::vector<uint8_t> ID_buffer, std::vector<uint8_t> Function_buffer, uint16_t ErrorCode, std::vector<uint8_t> DeviceID_buffer);  //返回成功码拼接
+    static bool ReturnFalse(int client_socket, std::vector<uint8_t> ID_buffer, std::vector<uint8_t> Function_buffer, uint16_t ErrorCode, std::vector<uint8_t> DeviceID_buffer);
+    static bool ReturnData(int client_socket, std::vector<uint8_t> ID_buffer, std::vector<uint8_t> Function_buffer, std::vector<uint8_t> BackData, std::string BackDataMode, std::vector<uint8_t> DeviceID_buffer);
+private:
+    static std::vector<uint8_t> dataMergence_template(std::vector<uint8_t> ID_buffer, std::vector<uint8_t> Function_buffer, std::vector<uint8_t> databuffer, std::vector<uint8_t> DeviceID_buffer);
+};
+
 class server_global_functools_print{
 public:
     static void print_vector_uint8t(std::string name, std::vector<uint8_t> byte);   // 顺序打印vector容器中的uint8_t类型数据
@@ -37,5 +49,8 @@ private:
     static std::vector<uint8_t> recBuffer;
     static int FindSegment(const std::vector<uint8_t>& recBuffer, const std::vector<uint8_t>& sequence, int startIndex = 0);
     static void RemoveProcessedData(int startIndex);
+    static void ProcessResult(int startIndex, int endIndex, std::vector<std::vector<uint8_t>>& buffer);
     
 };
+
+#endif global_data_H

@@ -1,3 +1,4 @@
+#include <socket.h>
 #include "IPCServerTools_v1/std_library.h"
 #include "IPCServerTools_v1/global_func.h"
 #include "Concurrentdic.cpp"
@@ -75,11 +76,9 @@ public:
 
         while (true) {
             // 清空缓存区
-            memset(recv_Msg_buffer, 0, sizeof(recv_Msg_buffer));  //消息空间清空
-            std::vector<uint8_t> Process_Msg_buffer;   //处理消息缓存区
-            std::vector<uint8_t> Processready_Msg_buffer;   //处理完成缓存区
-            std::vector<ProcessedData> recvofdataList_Msg_buffer;   //处理完成后数据部分缓存区
-            std::vector<std::vector<uint8_t>> recvdataList_Msg_buffer;
+            memset(recv_Msg_buffer, 0, sizeof(recv_Msg_buffer));        // 消息空间清空
+            std::vector<uint8_t> Process_Msg_buffer;                    // 处理消息缓存区
+            std::vector<std::vector<uint8_t>> Processready_Msg_buffer;  // 处理完成后数据部分缓存区
 
             // 接收客户端数据并判断是否在线
             bytes_received = recv(client_socket, recv_Msg_buffer, sizeof(recv_Msg_buffer), 0);  // 接收客户端发送的数据
@@ -117,15 +116,13 @@ public:
             std::cout << std::dec << std::endl;
 
             // 丢入Process函数进行处理，先截取到一帧完整的报文
-            recvdataList_Msg_buffer = cutdata.Process(Process_Msg_buffer);   //截取消息
+            Processready_Msg_buffer = cutdata.Process(Process_Msg_buffer);   //截取消息
 
             // For循环处理单帧数据
-            for (const auto& processedData : recvofdataList_Msg_buffer) {   //遍历容器内所有数据，有几帧报文重复几次（切割单帧）
+            for (const auto& processedData : Processready_Msg_buffer) {   //遍历容器内所有数据，有几帧报文重复几次（切割单帧）
                 // 访问 ProcessedData 中的成员
                 std::vector<uint8_t> full_right_recv = {};  // 初始化单帧报文空间
-                int intValue = processedData.intValue;
-                std::vector<uint8_t> uint8Vector = processedData.uint8Vector;
-                full_right_recv.insert(full_right_recv.end(), processedData.uint8Vector.begin(), processedData.uint8Vector.end());  // 拼接完整一帧报文
+                full_right_recv.insert(full_right_recv.end(), processedData.begin(), processedData.end());  // 拼接完整一帧报文
                 
                 // 截取自增码
                 std::vector<uint8_t> ID_buffer(full_right_recv.begin() + 4, full_right_recv.begin() + 4 + 4);   // 取出id
@@ -185,7 +182,7 @@ public:
                             {
                                 std::string BackDataMode = "行走状态信息";
                                 // 读取数组返回数据并发送
-                                if (ReturnData(client_socket, ID_buffer, Function_buffer, Information_Feedback, BackDataMode, Recv_head, Recv_end)) {
+                                if (server_global_functools_return::ReturnData(client_socket, ID_buffer, Function_buffer, Information_Feedback, BackDataMode, deviceID)) {
                                     continue;
                                 } else {
                                     ErrorCode = 0x0003; // 3为数据返回Case未返回
@@ -210,26 +207,26 @@ public:
                 } 
 
                 // 根据ErrorCode的值返回给上位机，同时把数据发送给车子
-                if (ErrorCode == 0x0001 && Function_buffer32 != 0x5854696E) {
+                if (ErrorCode == 0x0001 && Function_buffer32 != 0x11111111) {
                     //返回成功码
-                    if (ReturnSuccessful(client_socket, ID_buffer, Function_buffer, ErrorCode, Recv_head, Recv_end)) {
+                    if (server_global_functools_return::ReturnSuccessful(client_socket, ID_buffer, Function_buffer, ErrorCode, deviceID)) {
                         std::cout << "反馈'Success'成功" << std::endl;
                     }
-                } else if (ErrorCode == 0x0001 && Function_buffer32 == 0x5854696E) {
+                } else if (ErrorCode == 0x0001 && Function_buffer32 == 0x11111111) {
                     //返回成功码
-                    if (ReturnSuccessful(client_socket, ID_buffer, Function_buffer, ErrorCode, Recv_head, Recv_end)) {
+                    if (server_global_functools_return::ReturnSuccessful(client_socket, ID_buffer, Function_buffer, ErrorCode, deviceID)) {
                         std::cout << "心跳当前正常" << std::endl;
                     }
                 } else if (ErrorCode == 0x0005) {
                     printf("Crc错误\n");
-                    if (ReturnFalse(client_socket, ID_buffer, Function_buffer, ErrorCode, Recv_head, Recv_end)) {
+                    if (server_global_functools_return::ReturnFalse(client_socket, ID_buffer, Function_buffer, ErrorCode, deviceID)) {
                         std::cout << "反馈'False'成功" << std::endl;
                     }
                 } else {
                     // 其余情况
                     printf("ErrorCode不为1,请及时处理!!");
                     // 返回失败码
-                    if (ReturnFalse(client_socket, ID_buffer, Function_buffer, ErrorCode, Recv_head, Recv_end)) {
+                    if (server_global_functools_return::ReturnFalse(client_socket, ID_buffer, Function_buffer, ErrorCode, deviceID)) {
                         std::cout << "反馈'False'成功" << std::endl;
                     }
                 }

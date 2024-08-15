@@ -14,6 +14,14 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <cmath>
 
+
+
+#include <cstring>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <mutex>
+#include <algorithm>
+
 #include <vector>
 #include <tf/tf.h>
 #include <thread>
