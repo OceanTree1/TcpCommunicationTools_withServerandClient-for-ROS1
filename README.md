@@ -35,8 +35,5 @@ cd $ROSWorkSpace
 catkin_make
 rosrun IPCServerTools_v1 Server_IPC
 ```
-## 四、拓展
-### 4.1 对控制上的延伸
-我还做了一个在ROS1下简单控制小车前行的一个功能，控制主要为双轮差速小车，以此为主函数来进行调用处理（当前还在开发当中）。
 
 
