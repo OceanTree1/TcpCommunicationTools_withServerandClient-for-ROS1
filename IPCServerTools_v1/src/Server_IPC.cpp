@@ -67,7 +67,6 @@ public:
 
         int bytes_received; // 接收字节数
 
-        // ClipRecDataProcessor cliprecdataprocessor;  //裁帧类
         CutData cutdata;
         ConcurrentDictionary<uint32_t,std::vector<uint8_t>> myDictionary;   //字典类
         
@@ -120,7 +119,7 @@ public:
 
             // For循环处理单帧数据
             for (const auto& processedData : Processready_Msg_buffer) {   //遍历容器内所有数据，有几帧报文重复几次（切割单帧）
-                // 访问 ProcessedData 中的成员
+                // 访问 Processready_Msg_buffer 中的成员，通过processedData的形式
                 std::vector<uint8_t> full_right_recv = {};  // 初始化单帧报文空间
                 full_right_recv.insert(full_right_recv.end(), processedData.begin(), processedData.end());  // 拼接完整一帧报文
                 
