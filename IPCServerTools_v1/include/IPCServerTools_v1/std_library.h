@@ -14,8 +14,6 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <cmath>
 
-
-
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -46,4 +44,4 @@ public:
     static std::vector<uint8_t> Information_Feedback;  // 反馈数据举例
 };
 
-#endif std_library_H
+#endif

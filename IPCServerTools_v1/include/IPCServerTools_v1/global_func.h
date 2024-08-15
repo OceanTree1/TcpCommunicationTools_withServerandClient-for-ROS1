@@ -11,7 +11,7 @@ public:
 
 class server_global_functools_deviceID {
 public:
-    static bool deviceID_judging(const std::uint32_t bytes);
+    static bool deviceID_judging(const uint32_t bytes);
 };
 
 class server_global_functools_uintChange {
@@ -42,15 +42,12 @@ public:
 
 class CutData {
 public:
-    static std::vector<std::vector<uint8_t>> Process(const std::vector<uint8_t>& recBytes);
+    std::vector<std::vector<uint8_t>> Process(const std::vector<uint8_t>& recBytes);
 private:
-    static int intValue;
-    static std::vector<uint8_t> uint8Vector;
-    static std::vector<uint8_t> recBuffer;
-    static int FindSegment(const std::vector<uint8_t>& recBuffer, const std::vector<uint8_t>& sequence, int startIndex = 0);
-    static void RemoveProcessedData(int startIndex);
-    static void ProcessResult(int startIndex, int endIndex, std::vector<std::vector<uint8_t>>& buffer);
-    
+    std::vector<uint8_t> recBuffer;
+    int FindSegment(const std::vector<uint8_t>& recBuffer, const std::vector<uint8_t>& sequence, int startIndex = 0);
+    void RemoveProcessedData(int startIndex);
+    void ProcessResult(int startIndex, int endIndex, std::vector<std::vector<uint8_t>>& buffer);
 };
 
-#endif global_data_H
+#endif

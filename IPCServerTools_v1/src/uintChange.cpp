@@ -80,7 +80,7 @@ bool server_global_functools_uintChange::isBigEndian() {
 
     return bint.c[0] == 1;
 }
-std::vector<std::uint8_t> server_global_functools_uintChange::doubleToVector(double value, bool toBigEndian = false) {
+std::vector<std::uint8_t> server_global_functools_uintChange::doubleToVector(double value, bool toBigEndian) {
     std::vector<std::uint8_t> bytes(sizeof(double));
     std::memcpy(bytes.data(), &value, sizeof(double));
     // 如果需要，根据当前系统的字节序和目标字节序调整字节顺序

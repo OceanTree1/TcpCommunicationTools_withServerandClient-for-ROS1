@@ -1,4 +1,4 @@
-#include <socket.h>
+#include <sys/socket.h>
 #include "IPCServerTools_v1/std_library.h"
 #include "IPCServerTools_v1/global_func.h"
 #include "Concurrentdic.cpp"
@@ -9,6 +9,7 @@
 
 class server_IPC : server_share_data {
 public:
+    /************** 数据声明 ***************/
     // Tcp客户端连接超时时间
     static const int TIMEOUT_MS;
 
@@ -19,15 +20,16 @@ public:
 
     // 反馈数据定义
     static std::vector<uint8_t> Information_Feedback;  // 反馈数据举例
+    /************* 数据声明结束 **************/
 
-    //***************************************
 
+    /************* 函数业务编写 **************/
     // 参数初始化函数
     static void finish_init(){
-        /**********初始化内容*********/
+        /********** 初始化内容 *********/
         // 例如：某业务变量初始化为0
 
-        /****************************/
+        /******** 初始化内容结束 ********/
     }
 
     // 信号处理函数

@@ -1,9 +1,6 @@
 #include "IPCServerTools_v1/std_library.h"
 #include "IPCServerTools_v1/global_func.h"
 
-extern const std::vector<uint8_t> server_share_data::Recv_head;
-extern const std::vector<uint8_t> server_share_data::Recv_end;
-
 // ProcessResult功能：将所有完整帧报文处理在一个容器里面存放
 void CutData::ProcessResult(int startIndex, int endIndex, std::vector<std::vector<uint8_t>>& buffer){
     int length = endIndex - startIndex + server_share_data::Recv_end.size();
@@ -40,7 +37,7 @@ std::vector<std::vector<uint8_t>> CutData::Process(const std::vector<uint8_t>& r
 }
 
 // 偏暴力算法，去除KMP中的LPS（next数组）查找，因为报文头尽量都要是不同的，如有相同需要，可以加入KMP算法
-int CutData::FindSegment(const std::vector<uint8_t>& recBuffer, const std::vector<uint8_t>& sequence, int startIndex = 0){
+int CutData::FindSegment(const std::vector<uint8_t>& recBuffer, const std::vector<uint8_t>& sequence, int startIndex){
         int i = startIndex;
         int j = 0;
 

@@ -17,4 +17,4 @@ public:
 };
 
 
-#endif global_data_H
+#endif
