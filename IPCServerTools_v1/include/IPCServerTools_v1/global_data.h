@@ -2,7 +2,7 @@
 #define global_data_H
 #include "std_library.h"
 
-class server_global_data {
+class server_global_variable {
 public:
     // 全局报文头部与尾部
     static const std::vector<uint8_t> Recv_head;      // 头部
